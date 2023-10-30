@@ -54,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
       );
       const items = filesWithExistingInfo.map((file) => ({
         url: file.absoluteUrl,
-        description: `${file.url}${file.exists ? "" : " [CREATE]"}`,
+        description: `${file.exists ? "" : "[CREATE] "}${file.url}`,
         label: file.name,
       }));
       vscode.window
