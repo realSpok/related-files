@@ -36,6 +36,20 @@ describe("front", () => {
     ]);
   });
 
+  test("from javascript test", () => {
+    const relatedFiles = getSiblingsAndRelated(
+      "tests/integration/pods/login/controller-test.js",
+      ["route", "controller", "component", "template.hbs", "style.scss"],
+      ["app", "tests/unit", "tests/integration"],
+      ["-test"]
+    );
+    expect(relatedFiles).toEqual([
+      "app/pods/login/controller.ts [CREATE]",
+      "tests/integration/pods/login/controller-test.ts [CREATE]",
+      "tests/unit/pods/login/controller-test.ts [CREATE]",
+    ]);
+  });
+
   test("css", () => {
     const relatedFiles = getSiblingsAndRelated(
       "app/pods/login/style.scss",
