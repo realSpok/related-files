@@ -8,8 +8,16 @@ export const tester = (
   relatedPathParts: string[],
   testSuffixes: string[]
 ) => {
+  const wsRoot = __dirname + "/test/bun-tests";
   return pickOptions(
-    getSiblingsAndRelatedOptions(file, siblings, relatedPathParts, testSuffixes)
+    getSiblingsAndRelatedOptions(
+      file,
+      siblings,
+      relatedPathParts,
+      testSuffixes,
+      wsRoot
+    ),
+    wsRoot
   ).map((a) => `${a.url}${a.exists ? "" : " [CREATE]"}`);
 };
 
@@ -37,7 +45,8 @@ export function getSiblingsAndRelated(
       file,
       siblings,
       relatedPathParts,
-      testSuffixes
+      testSuffixes,
+      workspaceRoot
     ),
     workspaceRoot
   );
@@ -47,7 +56,8 @@ function getSiblingsAndRelatedOptions(
   file: string,
   siblings: string[],
   relatedPathParts: string[],
-  testSuffixes: string[]
+  testSuffixes: string[],
+  workspaceRoot: string
 ) {
   const normalizedPathParts = relatedPathParts.map((relatedPathPart) => {
     const part = relatedPathPart.endsWith("/")
@@ -69,7 +79,9 @@ function getSiblingsAndRelatedOptions(
         .replace(new RegExp(reg), "")
         .replace(new RegExp(reg2), normalizedPathParts[0])
     : file;
-
+  if (!fs.existsSync(path.join(workspaceRoot, mainFile))) {
+    mainFile = mainFile.replace(".js", ".ts");
+  }
   const possibleSiblings = testFile
     ? []
     : siblings
