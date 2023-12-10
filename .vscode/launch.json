@@ -29,6 +29,23 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		}
+		},
+		{
+			"type": "bun",
+			"request": "launch",
+			"name": "Debug Bun",
+			"program": "${file}", // just open *.test.ts file and this line will allow you to debug current test file
+			"args": [
+				"-t",
+				"when files exist"
+			],
+			"cwd": "${workspaceFolder}",
+			"env": {},
+			"strictEnv": false,
+			"watchMode": false,
+			"stopOnEntry": false,
+			"noDebug": false,
+			"runtime": "bun",
+		},
 	]
 }
