@@ -2,14 +2,17 @@
 import { expect, test, describe } from "bun:test";
 import { tester } from "../../utils";
 const getSiblingsAndRelated = tester;
+const config = {
+  siblings: ["route", "controller", "component", "template.hbs", "style.scss"],
+  relatedPathParts: ["app", "tests/unit", "tests/integration"],
+  testSuffixes: ["-test"],
+};
 
 describe("front", () => {
   test("main file", () => {
     const relatedFiles = getSiblingsAndRelated(
       "app/pods/login/controller.ts",
-      ["route", "controller", "component", "template.hbs", "style.scss"],
-      ["app", "tests/unit", "tests/integration"],
-      ["-test"]
+      config
     );
     expect(relatedFiles).toEqual([
       "app/pods/login/component.ts [CREATE]",
@@ -25,9 +28,7 @@ describe("front", () => {
   test("test", () => {
     const relatedFiles = getSiblingsAndRelated(
       "tests/integration/pods/login/controller-test.ts",
-      ["route", "controller", "component", "template.hbs", "style.scss"],
-      ["app", "tests/unit", "tests/integration"],
-      ["-test"]
+      config
     );
     expect(relatedFiles).toEqual([
       "app/pods/login/controller.ts [CREATE]",
@@ -39,9 +40,7 @@ describe("front", () => {
   test("from javascript test", () => {
     const relatedFiles = getSiblingsAndRelated(
       "tests/integration/pods/login/controller-test.js",
-      ["route", "controller", "component", "template.hbs", "style.scss"],
-      ["app", "tests/unit", "tests/integration"],
-      ["-test"]
+      config
     );
     expect(relatedFiles).toEqual([
       "app/pods/login/controller.ts [CREATE]",
@@ -53,9 +52,7 @@ describe("front", () => {
   test("css", () => {
     const relatedFiles = getSiblingsAndRelated(
       "app/pods/login/style.scss",
-      ["route", "controller", "component", "template.hbs", "style.scss"],
-      ["app", "tests/unit", "tests/integration"],
-      ["-test"]
+      config
     );
     expect(relatedFiles).toEqual([
       "app/pods/login/component.ts [CREATE]",

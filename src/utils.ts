@@ -4,17 +4,19 @@ const EXTENSIONS = ["ts", "js"];
 
 export const tester = (
   file: string,
-  siblings: string[],
-  relatedPathParts: string[],
-  testSuffixes: string[]
+  config: {
+    siblings: string[];
+    relatedPathParts: string[];
+    testSuffixes: string[];
+  }
 ) => {
   const wsRoot = __dirname + "/test/bun-tests";
   return pickOptions(
     getSiblingsAndRelatedOptions(
       file,
-      siblings,
-      relatedPathParts,
-      testSuffixes,
+      config.siblings,
+      config.relatedPathParts,
+      config.testSuffixes,
       wsRoot
     ),
     wsRoot

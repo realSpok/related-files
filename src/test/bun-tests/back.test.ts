@@ -1,23 +1,20 @@
 // @ts-ignore
 import { expect, test, describe, afterEach } from "bun:test";
-import fs from "fs";
-import path from "path";
 import { tester } from "../../utils";
+import { createFile } from "./test-helpers";
+import fs from "fs";
 const getSiblingsAndRelated = tester;
-const createFile = (filePath: string) => {
-  const fullPath = __dirname + "/" + filePath;
-  const dir = path.dirname(fullPath);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(__dirname + filePath, "");
+const config = {
+  siblings: [],
+  relatedPathParts: ["", "test/jest/"],
+  testSuffixes: [".test", ".unit.test"],
 };
 describe("back", () => {
   describe("when files dont exist", () => {
     test("from file", () => {
       const relatedFiles = getSiblingsAndRelated(
         "deserializers/model-customization-deserializer.ts",
-        [],
-        ["", "test/jest/"],
-        [".test", ".unit.test"]
+        config
       );
       expect(relatedFiles).toEqual([
         "deserializers/model-customization-deserializer.ts [CREATE]",
@@ -27,9 +24,7 @@ describe("back", () => {
     test("from test", () => {
       const relatedFiles = getSiblingsAndRelated(
         "test/jest/deserializers/model-customization-deserializer.test.ts",
-        [],
-        ["", "test/jest/"],
-        [".test", ".unit.test"]
+        config
       );
       expect(relatedFiles).toEqual([
         "deserializers/model-customization-deserializer.ts [CREATE]",
@@ -39,9 +34,7 @@ describe("back", () => {
     test("from js test", () => {
       const relatedFiles = getSiblingsAndRelated(
         "test/jest/deserializers/model-customization-deserializer.test.js",
-        [],
-        ["", "test/jest/"],
-        [".test", ".unit.test"]
+        config
       );
       expect(relatedFiles).toEqual([
         "deserializers/model-customization-deserializer.ts [CREATE]",
@@ -51,9 +44,7 @@ describe("back", () => {
     test("from test with alternate prefix", () => {
       const relatedFiles = getSiblingsAndRelated(
         "test/jest/deserializers/model-customization-deserializer.unit.test.ts",
-        [],
-        ["", "test/jest/"],
-        [".test", ".unit.test"]
+        config
       );
       expect(relatedFiles).toEqual([
         "deserializers/model-customization-deserializer.ts [CREATE]",
@@ -72,9 +63,7 @@ describe("back", () => {
         createFile("/deserializers/model-customization-deserializer.ts");
         const relatedFiles = getSiblingsAndRelated(
           "deserializers/model-customization-deserializer.ts",
-          [],
-          ["", "test/jest/"],
-          [".test", ".unit.test"]
+          config
         );
         expect(relatedFiles).toEqual([
           "deserializers/model-customization-deserializer.ts",
@@ -89,9 +78,7 @@ describe("back", () => {
         );
         const relatedFiles = getSiblingsAndRelated(
           "deserializers/model-customization-deserializer.ts",
-          [],
-          ["", "test/jest/"],
-          [".test", ".unit.test"]
+          config
         );
         expect(relatedFiles).toEqual([
           "deserializers/model-customization-deserializer.ts [CREATE]",
@@ -104,9 +91,7 @@ describe("back", () => {
         );
         const relatedFiles = getSiblingsAndRelated(
           "test/jest/deserializers/model-customization-deserializer.test.js",
-          [],
-          ["", "test/jest/"],
-          [".test", ".unit.test"]
+          config
         );
         expect(relatedFiles).toEqual([
           "deserializers/model-customization-deserializer.ts [CREATE]",
