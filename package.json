@@ -2,7 +2,7 @@
   "name": "find-related-files",
   "displayName": "Find related files",
   "description": "",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "vscode": "^1.83.0"
   },
@@ -54,7 +54,8 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:integration": "bun test src/test"
+    "test:integration": "bun test src/test",
+    "package": "vsce package | yes"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",

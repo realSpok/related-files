@@ -35,10 +35,7 @@
 			"request": "launch",
 			"name": "Debug Bun",
 			"program": "${file}", // just open *.test.ts file and this line will allow you to debug current test file
-			"args": [
-				"-t",
-				"when files exist"
-			],
+			"args": [],
 			"cwd": "${workspaceFolder}",
 			"env": {},
 			"strictEnv": false,
