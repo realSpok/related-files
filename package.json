@@ -55,7 +55,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "test:integration": "bun test src/test",
-    "package": "vsce package && cp *.vsix dist/"
+    "package": "vsce package && mv *.vsix dist/"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
