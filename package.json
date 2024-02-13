@@ -9,6 +9,9 @@
   "categories": [
     "Other"
   ],
+  "repository": {
+    "url": "https://github.com/realSpok/related-files"
+  },
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {

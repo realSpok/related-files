@@ -25,7 +25,22 @@ export function createFileIfMissing(filePath: string) {
   }
 
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
-  fs.writeFileSync(absPath, "Hello content!");
+  fs.writeFileSync(
+    absPath,
+    `
+
+describe('function', () => {
+    describe('If condition is met', () => {
+        it('should not throw a business error', async () => {
+            jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+            await runFunction();
+            expect(fs.existsSync).toHaveBeenCalled();
+        });
+    });
+});
+
+  `
+  );
 }
 
 export function activate(context: vscode.ExtensionContext) {
