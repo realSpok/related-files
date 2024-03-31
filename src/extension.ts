@@ -44,48 +44,41 @@ describe('function', () => {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  const findRelated = vscode.commands.registerCommand(
-    "find-related-files.find",
-    () => {
-      if (
-        !vscode.window.activeTextEditor ||
-        !vscode.workspace.workspaceFolders?.length
-      ) {
-        return;
-      }
-
-      const { testSuffixes, relatedPathParts, expectedSiblings } =
-        vscode.workspace.getConfiguration("relatedFiles");
-      const document = vscode.window.activeTextEditor.document;
-      const file = vscode.workspace.asRelativePath(document.uri.path);
-      const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.path;
-
-      const filesWithExistingInfo = utils.getSiblingsAndRelated(
-        file,
-        expectedSiblings,
-        relatedPathParts,
-        testSuffixes,
-        workspaceRoot
-      );
-      const items = filesWithExistingInfo.map((file) => ({
-        url: file.absoluteUrl,
-        description: `${file.exists ? "" : "[CREATE] "}${file.url}`,
-        label: file.name,
-      }));
-      vscode.window
-        .showQuickPick(items, {
-          placeHolder: "Files related ",
-          matchOnDescription: true,
-        })
-        .then((item) => {
-          if (!item) {
-            return;
-          }
-          createFileIfMissing(item.url);
-          open(item);
-        });
+  const findRelated = vscode.commands.registerCommand("find-related-files.find", () => {
+    if (!vscode.window.activeTextEditor || !vscode.workspace.workspaceFolders?.length) {
+      return;
     }
-  );
+
+    const { testSuffixes, relatedPathParts, expectedSiblings, preProcess } =
+      vscode.workspace.getConfiguration("relatedFiles");
+    const document = vscode.window.activeTextEditor.document;
+    const file = vscode.workspace.asRelativePath(document.uri.path);
+    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.path;
+
+    const filesWithExistingInfo = utils.getSiblingsAndRelated(file, workspaceRoot, {
+      siblings: expectedSiblings,
+      relatedPathParts,
+      testSuffixes,
+      preProcess,
+    });
+    const items = filesWithExistingInfo.map((file) => ({
+      url: file.absoluteUrl,
+      description: `${file.exists ? "" : "[CREATE] "}${file.url}`,
+      label: file.name,
+    }));
+    vscode.window
+      .showQuickPick(items, {
+        placeHolder: "Files related ",
+        matchOnDescription: true,
+      })
+      .then((item) => {
+        if (!item) {
+          return;
+        }
+        createFileIfMissing(item.url);
+        open(item);
+      });
+  });
 
   context.subscriptions.push(findRelated);
 }

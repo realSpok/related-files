@@ -1,96 +1,76 @@
 import path from "path";
 import fs from "fs";
 const EXTENSIONS = ["ts", "js"];
+type Config = {
+  siblings: string[];
+  relatedPathParts: string[];
+  testSuffixes: string[];
+  preProcess?: string;
+};
 
-export const tester = (
-  file: string,
-  config: {
-    siblings: string[];
-    relatedPathParts: string[];
-    testSuffixes: string[];
-  }
-) => {
-  const wsRoot = __dirname + "/test/bun-tests";
-  return pickOptions(
-    getSiblingsAndRelatedOptions(
-      file,
-      config.siblings,
-      config.relatedPathParts,
-      config.testSuffixes,
-      wsRoot
-    ),
-    wsRoot
-  ).map((a) => `${a.url}${a.exists ? "" : " [CREATE]"}`);
+export const tester = (file: string, config: Config) => {
+  const workspaceRoot = __dirname + "/test/bun-tests";
+  return pickOptions(getSiblingsAndRelatedOptions(file, workspaceRoot, config), workspaceRoot).map(
+    (a) => `${a.url}${a.exists ? "" : " [CREATE]"}`
+  );
 };
 
 function removeExtension(filename: string) {
   return filename.substring(0, filename.lastIndexOf(".")) || filename;
 }
 
-export function isTestFile(path: string, relatedPathParts: string[]) {
+export function getIsTestFile(path: string, relatedPathParts: string[]) {
+  return Boolean(path.match(/\btests?\b/));
   return Boolean(
     relatedPathParts
-      .filter((relatedPathPart) => relatedPathPart.includes("test"))
+      .filter((relatedPathPart) => relatedPathPart.match(/\btests?\b/))
       .find((relatedPathPart) => path.includes(relatedPathPart))
   );
 }
 
-export function getSiblingsAndRelated(
-  file: string,
-  siblings: string[],
-  relatedPathParts: string[],
-  testSuffixes: string[],
-  workspaceRoot: string
-) {
-  return pickOptions(
-    getSiblingsAndRelatedOptions(
-      file,
-      siblings,
-      relatedPathParts,
-      testSuffixes,
-      workspaceRoot
-    ),
-    workspaceRoot
-  );
+export function getSiblingsAndRelated(file: string, workspaceRoot: string, config: Config) {
+  return pickOptions(getSiblingsAndRelatedOptions(file, workspaceRoot, config));
 }
 
-function getSiblingsAndRelatedOptions(
-  file: string,
-  siblings: string[],
-  relatedPathParts: string[],
-  testSuffixes: string[],
-  workspaceRoot: string
-) {
-  const normalizedPathParts = relatedPathParts.map((relatedPathPart) => {
-    const part = relatedPathPart.endsWith("/")
-      ? relatedPathPart
-      : relatedPathPart + "/";
-    if (part === "/") {
-      return "";
+function getSiblingsAndRelatedOptions(file: string, workspaceRoot: string, config: Config) {
+  const { preProcess } = config;
+  const { relatedPathParts, siblings, testSuffixes } = (() => {
+    if (preProcess) {
+      return Function(preProcess).call(null, file, config, workspaceRoot) as Config;
+    } else {
+      return config;
     }
-    return part;
-  });
-  const testFile = isTestFile(file, relatedPathParts);
-  const reg = testSuffixes.join("|").replaceAll(".", "\\.");
-  const reg2 = normalizedPathParts
+  })();
+
+  const replaceStarWith = file.split("/")[relatedPathParts[0].split("/").findIndex((elem) => elem === "*")];
+  const normalizedPathParts = relatedPathParts
+    .map((relatedPathPart) => {
+      const part = relatedPathPart.endsWith("/") ? relatedPathPart : relatedPathPart + "/";
+      if (part === "/") {
+        return "";
+      }
+      return part;
+    })
+    .map((relatedPathPart) => relatedPathPart.replace("*", replaceStarWith));
+  const isTestFile = getIsTestFile(file, relatedPathParts);
+  const testSuffixesRegex = testSuffixes.join("|").replaceAll(".", "\\.");
+  const testPathPartRegex = normalizedPathParts
+    .filter((part) => part.match(/tests?/))
     .filter((part) => Boolean(part))
     .join("|")
     .replaceAll(".", "\\.");
-  let mainFile = testFile
-    ? file
-        .replace(new RegExp(reg), "")
-        .replace(new RegExp(reg2), normalizedPathParts[0])
+  let mainFile = isTestFile
+    ? file.replace(new RegExp(testSuffixesRegex), "").replace(new RegExp(testPathPartRegex), normalizedPathParts[0])
     : file;
+
   if (!fs.existsSync(path.join(workspaceRoot, mainFile))) {
     mainFile = mainFile.replace(".js", ".ts");
   }
-  const possibleSiblings = testFile
+  const possibleSiblings = isTestFile
     ? []
     : siblings
         .filter(
-          (sibling) =>
-            sibling !== path.basename(removeExtension(mainFile)) &&
-            sibling !== path.basename(mainFile)
+          (sibling) => sibling !== path.basename(removeExtension(mainFile)) && sibling !== path.basename(mainFile)
         )
         .map((sibling) => {
           const dirname = path.dirname(mainFile);
@@ -98,9 +78,7 @@ function getSiblingsAndRelatedOptions(
             name: sibling,
             options: sibling.match(/\./)
               ? [path.join(dirname, sibling)]
-              : EXTENSIONS.map((ext) =>
-                  path.join(dirname, sibling + "." + ext)
-                ),
+              : EXTENSIONS.map((ext) => path.join(dirname, sibling + "." + ext)),
           };
           return s;
         });
@@ -113,24 +91,18 @@ function getSiblingsAndRelatedOptions(
           options: testSuffixes.flatMap((testSuffix) =>
             EXTENSIONS.map((ext) => {
               return `${removeExtension(mainFile).replace(
-                normalizedPathParts[0],
+                new RegExp(normalizedPathParts[0]),
                 relatedPathPart
               )}${testSuffix}.${ext}`;
             })
           ),
         }))
     : [];
-  return [
-    { name: "main", options: [mainFile] },
-    ...possibleSiblings,
-    ...possibleRelated,
-  ];
+  return [{ name: "main", options: [mainFile] }, ...possibleSiblings, ...possibleRelated];
 }
 function getBestOption(options: string[], workspaceRoot?: string) {
   const workspaceRootAsString = workspaceRoot ? workspaceRoot : "";
-  const existingFile = options.find((option) =>
-    fs.existsSync(path.join(workspaceRootAsString, option))
-  );
+  const existingFile = options.find((option) => fs.existsSync(path.join(workspaceRootAsString, option)));
   if (existingFile) {
     return {
       url: existingFile,
@@ -145,10 +117,7 @@ function getBestOption(options: string[], workspaceRoot?: string) {
   };
 }
 
-function pickOptions(
-  relatedOptions: { name: string; options: string[] }[],
-  workspaceRoot?: string
-) {
+function pickOptions(relatedOptions: { name: string; options: string[] }[], workspaceRoot?: string) {
   return relatedOptions
     .map((fileOption) => ({
       name: fileOption.name,
