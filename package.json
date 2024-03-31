@@ -2,7 +2,7 @@
   "name": "find-related-files",
   "displayName": "Find related files",
   "description": "",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "engines": {
     "vscode": "^1.83.0"
   },
@@ -46,6 +46,13 @@
           ],
           "default": null,
           "description": "the part of the path to replace to access test or code files"
+        },
+        "relatedFiles.preProcess": {
+          "type": [
+            "string"
+          ],
+          "default": null,
+          "description": "some js / ts preProcess code for the config. arguments contains [file, config, workspaceRoot]"
         }
       }
     }

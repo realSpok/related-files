@@ -29,7 +29,7 @@ export function getIsTestFile(path: string, relatedPathParts: string[]) {
 }
 
 export function getSiblingsAndRelated(file: string, workspaceRoot: string, config: Config) {
-  return pickOptions(getSiblingsAndRelatedOptions(file, workspaceRoot, config));
+  return pickOptions(getSiblingsAndRelatedOptions(file, workspaceRoot, config), workspaceRoot);
 }
 
 function getSiblingsAndRelatedOptions(file: string, workspaceRoot: string, config: Config) {
@@ -100,24 +100,26 @@ function getSiblingsAndRelatedOptions(file: string, workspaceRoot: string, confi
     : [];
   return [{ name: "main", options: [mainFile] }, ...possibleSiblings, ...possibleRelated];
 }
-function getBestOption(options: string[], workspaceRoot?: string) {
-  const workspaceRootAsString = workspaceRoot ? workspaceRoot : "";
-  const existingFile = options.find((option) => fs.existsSync(path.join(workspaceRootAsString, option)));
+function getBestOption(options: string[], workspaceRoot: string) {
+  if (!workspaceRoot) {
+    throw new Error("Worspace not provided");
+  }
+  const existingFile = options.find((option) => fs.existsSync(path.join(workspaceRoot, option)));
   if (existingFile) {
     return {
       url: existingFile,
-      absoluteUrl: path.join(workspaceRootAsString, existingFile),
+      absoluteUrl: path.join(workspaceRoot, existingFile),
       exists: true,
     };
   }
   return {
     url: options[0],
-    absoluteUrl: path.join(workspaceRootAsString, options[0]),
+    absoluteUrl: path.join(workspaceRoot, options[0]),
     exists: false,
   };
 }
 
-function pickOptions(relatedOptions: { name: string; options: string[] }[], workspaceRoot?: string) {
+function pickOptions(relatedOptions: { name: string; options: string[] }[], workspaceRoot: string) {
   return relatedOptions
     .map((fileOption) => ({
       name: fileOption.name,
